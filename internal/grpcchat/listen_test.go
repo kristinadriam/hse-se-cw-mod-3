@@ -55,4 +55,16 @@ func TestListenOn_Dial_roundTrip(t *testing.T) {
 	if rm.Body != "ping" || rm.SenderName != "a" {
 		t.Fatalf("got %+v", rm)
 	}
+
+	reply := domain.Message{SenderName: "b", Body: "pong", SentAt: time.Unix(2, 0).UTC()}
+	if err := serverTr.Send(ctx, reply); err != nil {
+		t.Fatal(err)
+	}
+	cm, err := clientTr.Receive(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cm.Body != "pong" || cm.SenderName != "b" {
+		t.Fatalf("client got %+v", cm)
+	}
 }
