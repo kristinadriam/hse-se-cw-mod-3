@@ -1,0 +1,5 @@
+/bin/
+/dist/
+.venv/
+*.exe
+.DS_Store

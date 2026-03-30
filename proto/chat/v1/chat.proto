@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package chat.v1;
+
+option go_package = "hse-se-cw-mod-3/proto/chat/v1;chatv1";
+
+// ChatService provides a single bidirectional stream for P2P messaging.
+service ChatService {
+  rpc StreamChat(stream ChatMessage) returns (stream ChatMessage);
+}
+
+message ChatMessage {
+  string sender_name = 1;
+  int64 sent_unix_nano = 2;
+  string body = 3;
+}
