@@ -29,7 +29,8 @@ TODO: описание
 
 - Go **1.22+**
 - Для `make pytest`: Python **3.10+**; один раз: `python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt` — дальше `make pytest` подхватит `.venv` автоматически
-- Для пересборки `.proto`: [protoc](https://protobuf.dev/) и плагины `protoc-gen-go`, `protoc-gen-go-grpc` (`go install` из `Makefile` не добавлен — см. комментарии в `Makefile`)
+- Для пересборки `.proto`: [protoc](https://protobuf.dev/) версии **25.3** и плагины `protoc-gen-go`, `protoc-gen-go-grpc`
+- Версия `protoc` синхронизирована между разработкой и CI через `PROTOC_VERSION` в `Makefile` и `.github/workflows/ci.yml`
 
 ## Сборка и запуск
 
@@ -65,6 +66,7 @@ go build -o chat ./cmd/chat
 | `make pytest` | собрать `bin/chat` и запустить интеграционные тесты (Python/pytest) |
 | `make build` | собрать `bin/chat` |
 | `make proto` | перегенерировать `proto/chat/v1/*.pb.go` (нужен `protoc`) |
+| `make proto-check` | перегенерировать `.proto` и проверить отсутствие незакоммиченных изменений |
 
 ## Архитектура
 
