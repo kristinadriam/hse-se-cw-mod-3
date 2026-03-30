@@ -23,3 +23,61 @@
 ## Сборка и тестирование
 
 TODO: описание
+Два участника обмениваются текстом **напрямую** по TCP/gRPC: один процесс **слушает** порт, второй **подключается** по адресу.
+
+## Требования
+
+- Go **1.22+**
+- Для `make pytest`: Python **3.10+**; один раз: `python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt` — дальше `make pytest` подхватит `.venv` автоматически
+- Для пересборки `.proto`: [protoc](https://protobuf.dev/) версии **25.3** и плагины `protoc-gen-go`, `protoc-gen-go-grpc`
+- Версия `protoc` синхронизирована между разработкой и CI через `PROTOC_VERSION` в `Makefile` и `.github/workflows/ci.yml`
+
+## Сборка и запуск
+
+```bash
+go build -o chat ./cmd/chat
+```
+
+**Слушатель (сервер в смысле «ждёт входящее»):**
+
+```bash
+./chat -name Alice -listen :50051
+```
+
+**Подключение к peer-у:**
+
+```bash
+./chat -name Bob -connect 127.0.0.1:50051
+```
+
+Сначала запустите слушателя, затем клиента на другой машине укажите реальный IP вместо `127.0.0.1`.
+
+Входящие сообщения выводятся блоком: время (UTC, RFC3339Nano), имя отправителя, текст.
+
+**Выход:** команды `/quit` или `/exit`, либо **Ctrl+C**.
+
+Справка по флагам: `./chat -h`.
+
+## Разработка
+
+| Команда    | Действие        |
+|-----------|-----------------|
+| `make test` | `go test ./...` |
+| `make pytest` | собрать `bin/chat` и запустить интеграционные тесты (Python/pytest) |
+| `make build` | собрать `bin/chat` |
+| `make proto` | перегенерировать `proto/chat/v1/*.pb.go` (нужен `protoc`) |
+| `make proto-check` | перегенерировать `.proto` и проверить отсутствие незакоммиченных изменений |
+
+## Архитектура
+
+См. [docs/architecture/architecture.md](docs/architecture/architecture.md).
+
+## Структура репозитория
+
+- `cmd/chat` — точка входа
+- `internal/cli` — разбор флагов
+- `internal/domain` — модель сообщения
+- `internal/grpcchat` — gRPC-клиент/сервер и адаптер к `transport.Transport`
+- `internal/session` — цикл ввода/вывода и жизненный цикл сессии
+- `internal/ui` — форматирование сообщений в консоль
+- `proto/chat/v1` — protobuf и сгенерированный gRPC-код
