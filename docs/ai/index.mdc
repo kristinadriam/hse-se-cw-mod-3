@@ -1,8 +1,0 @@
----
-description: Точка входа к контексту проекта.
----
-
-# Индекс
-
-- [Архитектура](../architecture/architecture.md) — слои и gRPC.
-- [README](../../README.md) — сборка и флаги CLI.

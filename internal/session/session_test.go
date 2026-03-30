@@ -56,7 +56,9 @@ func (p *pipeTransport) Close() error {
 }
 
 func newPipeTransport() *pipeTransport {
-	return &pipeTransport{recv: make(chan domain.Message, 16)}
+	// Unbuffered: Send blocks until Receive runs, so a line cannot be "queued"
+	// ahead of /quit while recvLoop is still idle (avoids flaky empty output).
+	return &pipeTransport{recv: make(chan domain.Message)}
 }
 
 func TestRun_quit(t *testing.T) {
@@ -68,6 +70,35 @@ func TestRun_quit(t *testing.T) {
 	defer cancel()
 	if err := Run(ctx, "me", tr, in, &out); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestRun_exit_alias(t *testing.T) {
+	t.Parallel()
+	tr := newPipeTransport()
+	in := strings.NewReader("/exit\n")
+	var out bytes.Buffer
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := Run(ctx, "me", tr, in, &out); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Pipe transport feeds sent messages back into Receive; recv loop prints them (self-echo scenario).
+func TestRun_line_echo_to_output(t *testing.T) {
+	t.Parallel()
+	tr := newPipeTransport()
+	in := strings.NewReader("hello\n/quit\n")
+	var out bytes.Buffer
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := Run(ctx, "me", tr, in, &out); err != nil {
+		t.Fatal(err)
+	}
+	s := out.String()
+	if !strings.Contains(s, "hello") || !strings.Contains(s, "me") {
+		t.Fatalf("expected sender and body in output, got %q", s)
 	}
 }
 
